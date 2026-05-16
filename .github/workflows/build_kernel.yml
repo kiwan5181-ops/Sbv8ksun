@@ -17,10 +17,11 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next Manual-Otomatis
+      - name: Pasang KernelSU Next Tanpa Submodule
         run: |
           cd kernel-source
-          git submodule add https://github.com/rifsxd/KernelSU-Next.git KernelSU-Next
+          # Menggunakan git clone biasa ke dalam folder drivers/ untuk menjamin file Makefile-nya ada
+          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git drivers/KernelSU-Next
           echo "obj-y += KernelSU-Next/kernel/" >> drivers/Makefile
 
       - name: Aktifkan KSU Next ke Surya Defconfig
@@ -37,7 +38,6 @@ jobs:
           export SUBARCH=arm64
           export HEADER_ARCH=arm64
           
-          # Gunakan Clang 14 resmi dari repositori Ubuntu yang stabil untuk kernel 4.14
           make O=out ARCH=arm64 surya-perf_defconfig
           make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
 
