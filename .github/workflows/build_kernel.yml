@@ -11,16 +11,15 @@ jobs:
       - name: Setup Alat Kerja
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync wget
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
 
-      - name: Download AOSP Clang Bawaan Google
+      - name: Download Azure Clang (Toolchain Anti-Gagal)
         run: |
-          mkdir -p $GITHUB_WORKSPACE/aosp-clang
-          cd $GITHUB_WORKSPACE/aosp-clang
-          # Download AOSP Clang r488109 (Versi stabil untuk kernel 4.14/4.19)
-          wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r488109.tar.gz
-          tar -xf clang-r488109.tar.gz
-          rm clang-r488109.tar.gz
+          mkdir -p $GITHUB_WORKSPACE/azure-clang
+          git clone --depth=1 https://github.com/P some-guy/azure-clang.git $GITHUB_WORKSPACE/azure-clang
+          # NB: Jika link di atas ada kendala, repo di bawah ini adalah alternatif tercepat
+          rm -rf $GITHUB_WORKSPACE/azure-clang
+          git clone --depth=1 https://gitlab.com/ZyCros/ZyCros-Clang.git $GITHUB_WORKSPACE/azure-clang
 
       - name: Ambil Source Strombreaker Lo
         run: |
@@ -39,13 +38,13 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Pake Script Dev Sbv8 + AOSP Clang
+      - name: Proses Masak Pake Script Dev Sbv8 + Clang
         run: |
           cd kernel-source
           export ARCH=arm64
           export SUBARCH=arm64
-          # Masukkan AOSP Clang ke jalur sistem biar build.sh bisa baca
-          export PATH="$GITHUB_WORKSPACE/aosp-clang/bin:$PATH"
+          # Masukkan compiler baru ke jalur sistem agar build.sh mendeteksi perintah clang
+          export PATH="$GITHUB_WORKSPACE/azure-clang/bin:$PATH"
           chmod +x build.sh
           ./build.sh
 
