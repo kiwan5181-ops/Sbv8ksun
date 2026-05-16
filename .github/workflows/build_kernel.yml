@@ -20,7 +20,6 @@ jobs:
       - name: Pasang KernelSU Next Tanpa Submodule
         run: |
           cd kernel-source
-          # Menggunakan git clone biasa ke dalam folder drivers/ untuk menjamin file Makefile-nya ada
           git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git drivers/KernelSU-Next
           echo "obj-y += KernelSU-Next/kernel/" >> drivers/Makefile
 
@@ -31,7 +30,7 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Kernel (Murni Lokal Server)
+      - name: Proses Masak Kernel (Pelacak Error Mutlak)
         run: |
           cd kernel-source
           export ARCH=arm64
@@ -39,7 +38,9 @@ jobs:
           export HEADER_ARCH=arm64
           
           make O=out ARCH=arm64 surya-perf_defconfig
-          make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
+          
+          # Ditambahkan -k (keep-going) dan V=1 supaya kalau ada error, penyebab aslinya langsung ketahuan di log akhir
+          make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all) -k V=1
 
       - name: Ambil Hasil Jadi (Image.gz-dtb)
         uses: actions/upload-artifact@v4
