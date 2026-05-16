@@ -17,14 +17,14 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Inject KernelSU Next ke Source Kernel
+      - name: Pasang KernelSU Next (Jalur Benar Pemecah Error)
         run: |
           cd kernel-source
-          # 1. Download script patcher resmi dari KernelSU Next
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -s main
+          # 1. Clone dengan nama folder 'kernelsu' (huruf kecil semua) agar rapi
+          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git drivers/kernelsu
           
-          # 2. Opsional jika setup.sh di atas sempat mengubah struktur, kita pastikan benderanya aktif
-          # Script di atas otomatis melakukan inject ke fs/, driver/, dan arch/arm64/ secara murni.
+          # 2. Daftarkan foldernya ke drivers/Makefile (Tanpa embel-embel /kernel lagi!)
+          echo "obj-y += kernelsu/" >> drivers/Makefile
 
       - name: Aktifkan KSU Next ke Surya Defconfig
         run: |
