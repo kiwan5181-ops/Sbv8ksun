@@ -17,13 +17,19 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next (Jalur Benar Pemecah Error)
+      - name: Pasang KernelSU Next (Jalur Resmi & Presisi)
         run: |
           cd kernel-source
-          # 1. Clone dengan nama folder 'kernelsu' (huruf kecil semua) agar rapi
-          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git drivers/kernelsu
+          # 1. Clone repo KSU-Next ke folder sementara
+          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git ksu_temp
           
-          # 2. Daftarkan foldernya ke drivers/Makefile (Tanpa embel-embel /kernel lagi!)
+          # 2. Pindahkan isi sub-folder 'kernel' milik KSU-Next langsung ke 'drivers/kernelsu'
+          # Langkah ini dilakukan supaya file 'Makefile' berada tepat di root 'drivers/kernelsu/' sesuai kemauan sistem build Strombreaker
+          mkdir -p drivers/kernelsu
+          cp -r ksu_temp/kernel/* drivers/kernelsu/
+          rm -rf ksu_temp
+          
+          # 3. Daftarkan foldernya ke drivers/Makefile utama kernel
           echo "obj-y += kernelsu/" >> drivers/Makefile
 
       - name: Aktifkan KSU Next ke Surya Defconfig
