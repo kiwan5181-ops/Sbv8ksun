@@ -22,10 +22,11 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next Otomatis
+      - name: Pasang KernelSU Next Manual-Otomatis
         run: |
           cd kernel-source
-          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -s main
+          git submodule add https://github.com/rifsxd/KernelSU-Next.git KernelSU-Next
+          echo "obj-y += KernelSU-Next/kernel/" >> drivers/Makefile
 
       - name: Aktifkan KSU Next ke Surya Defconfig
         run: |
