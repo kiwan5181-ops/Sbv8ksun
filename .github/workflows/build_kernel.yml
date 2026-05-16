@@ -8,16 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Setup Alat Kerja Lengkap
+      - name: Setup Alat Kerja + Install Clang Resmi Ubuntu
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
-
-      - name: Download AOSP Clang Terkalibrasi (Anti-Gagal)
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/aosp-clang
-          # Tarik Clang 17 khusus Android yang kompatibel penuh dengan Strombreaker V8
-          git clone --depth=1 https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r498229b $GITHUB_WORKSPACE/aosp-clang
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang-14 lld-14 git rsync llvm-14 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
       - name: Ambil Source Strombreaker Lo
         run: |
@@ -36,21 +30,16 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Kernel
+      - name: Proses Masak Kernel (Murni Lokal Server)
         run: |
           cd kernel-source
           export ARCH=arm64
           export SUBARCH=arm64
           export HEADER_ARCH=arm64
           
-          # Masukkan AOSP Clang ke dalam sistem path
-          export PATH="$GITHUB_WORKSPACE/aosp-clang/bin:$PATH"
-          
-          # Konfigurasi defconfig Poco X3 NFC
+          # Gunakan Clang 14 resmi dari repositori Ubuntu yang stabil untuk kernel 4.14
           make O=out ARCH=arm64 surya-perf_defconfig
-          
-          # Proses compile utama menggunakan AOSP Clang
-          make O=out ARCH=arm64 CC=clang LD=ld.lld CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
+          make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
 
       - name: Ambil Hasil Jadi (Image.gz-dtb)
         uses: actions/upload-artifact@v4
