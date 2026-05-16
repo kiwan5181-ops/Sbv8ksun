@@ -17,26 +17,20 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next (Metode Symlink Murni)
+      - name: Inject KSU Next Jalur Resmi Komunitas (Legacy Branch)
         run: |
           cd kernel-source
-          # 1. Clone repositori utuh ke folder KernelSU-Next di root
-          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git KernelSU-Next
-          
-          # 2. Buat hubungan (symlink) sub-folder kernel-nya ke drivers/kernelsu secara rapi
-          ln -s "$(pwd)/KernelSU-Next/kernel" "$(pwd)/drivers/kernelsu"
-          
-          # 3. Daftarkan ke drivers/Makefile utama kernel
-          echo "obj-y += kernelsu/" >> drivers/Makefile
+          # Menggunakan skrip resmi KSU-Next khusus untuk kernel tua (4.14 non-GKI)
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -s legacy
 
-      - name: Aktifkan KSU Next ke Surya Defconfig
+      - name: Aktifkan KSU ke Surya Defconfig
         run: |
           cd kernel-source
+          # Mengaktifkan benderanya di config Poco X3 NFC lo
           echo "CONFIG_KSU=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
-          echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Kernel (Murni Lokal Server)
+      - name: Proses Masak Kernel
         run: |
           cd kernel-source
           export ARCH=arm64
