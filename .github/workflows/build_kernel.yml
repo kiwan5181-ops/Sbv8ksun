@@ -6,17 +6,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Setup Alat Kerja
         run: |
           sudo apt-get update
-          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync wget
 
-      - name: Download Proton Clang (Toolchain)
+      - name: Download AOSP Clang Bawaan Google
         run: |
-          mkdir -p $GITHUB_WORKSPACE/proton-clang
-          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/proton-clang
+          mkdir -p $GITHUB_WORKSPACE/aosp-clang
+          cd $GITHUB_WORKSPACE/aosp-clang
+          # Download AOSP Clang r488109 (Versi stabil untuk kernel 4.14/4.19)
+          wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r488109.tar.gz
+          tar -xf clang-r488109.tar.gz
+          rm clang-r488109.tar.gz
 
       - name: Ambil Source Strombreaker Lo
         run: |
@@ -35,14 +39,15 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Kernel (Compile)
+      - name: Proses Masak Pake Script Dev Sbv8 + AOSP Clang
         run: |
           cd kernel-source
           export ARCH=arm64
           export SUBARCH=arm64
-          export PATH="$GITHUB_WORKSPACE/proton-clang/bin:$PATH"
-          make O=out ARCH=arm64 surya-perf_defconfig
-          make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
+          # Masukkan AOSP Clang ke jalur sistem biar build.sh bisa baca
+          export PATH="$GITHUB_WORKSPACE/aosp-clang/bin:$PATH"
+          chmod +x build.sh
+          ./build.sh
 
       - name: Ambil Hasil Jadi (Image.gz)
         uses: actions/upload-artifact@v4
