@@ -17,11 +17,14 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next Tanpa Submodule
+      - name: Inject KernelSU Next ke Source Kernel
         run: |
           cd kernel-source
-          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git drivers/KernelSU-Next
-          echo "obj-y += KernelSU-Next/kernel/" >> drivers/Makefile
+          # 1. Download script patcher resmi dari KernelSU Next
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -s main
+          
+          # 2. Opsional jika setup.sh di atas sempat mengubah struktur, kita pastikan benderanya aktif
+          # Script di atas otomatis melakukan inject ke fs/, driver/, dan arch/arm64/ secara murni.
 
       - name: Aktifkan KSU Next ke Surya Defconfig
         run: |
@@ -30,7 +33,7 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Kernel (Pelacak Error Mutlak)
+      - name: Proses Masak Kernel (Murni Lokal Server)
         run: |
           cd kernel-source
           export ARCH=arm64
@@ -38,9 +41,7 @@ jobs:
           export HEADER_ARCH=arm64
           
           make O=out ARCH=arm64 surya-perf_defconfig
-          
-          # Ditambahkan -k (keep-going) dan V=1 supaya kalau ada error, penyebab aslinya langsung ketahuan di log akhir
-          make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all) -k V=1
+          make O=out ARCH=arm64 CC=clang-14 LD=ld.lld-14 AR=llvm-ar-14 NM=llvm-nm-14 OBJCOPY=llvm-objcopy-14 OBJDUMP=llvm-objdump-14 STRIP=llvm-strip-14 CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
 
       - name: Ambil Hasil Jadi (Image.gz-dtb)
         uses: actions/upload-artifact@v4
