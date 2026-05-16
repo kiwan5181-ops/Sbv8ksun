@@ -8,15 +8,10 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Setup Alat Kerja
+      - name: Setup Alat Kerja Lengkap
         run: |
           sudo apt-get update
           sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
-
-      - name: Download ZyCros Clang (Toolchain Cocok Buat Surya)
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/zycros-clang
-          git clone --depth=1 https://gitlab.com/ZyCros/ZyCros-Clang.git $GITHUB_WORKSPACE/zycros-clang
 
       - name: Ambil Source Strombreaker Lo
         run: |
@@ -35,18 +30,24 @@ jobs:
           echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
           echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
 
-      - name: Proses Masak Pake Script Dev Sbv8 + Clang
+      - name: Proses Masak Kernel (Murni Anti-Gagal)
         run: |
           cd kernel-source
           export ARCH=arm64
           export SUBARCH=arm64
-          # Masukkan compiler baru ke jalur sistem agar build.sh mendeteksi perintah clang
-          export PATH="$GITHUB_WORKSPACE/zycros-clang/bin:$PATH"
-          chmod +x build.sh
-          ./build.sh
+          export HEADER_ARCH=arm64
+          
+          # Membaca konfigurasi Poco X3 NFC lo
+          make O=out ARCH=arm64 surya-perf_defconfig
+          
+          # Mulai compile pake Clang bawaan server GitHub yang super stabil
+          make O=out ARCH=arm64 CC=clang LD=ld.lld CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
 
-      - name: Ambil Hasil Jadi (Image.gz)
+      - name: Ambil Hasil Jadi (Image.gz-dtb)
         uses: actions/upload-artifact@v4
         with:
           name: Strombreaker-Surya-KSUNext
-          path: kernel-source/out/arch/arm64/boot/Image.gz-dtb
+          path: |
+            kernel-source/out/arch/arm64/boot/Image.gz-dtb
+            kernel-source/out/arch/arm64/boot/Image.gz
+            kernel-source/out/arch/arm64/boot/Image
