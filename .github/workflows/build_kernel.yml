@@ -13,13 +13,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
 
-      - name: Download Azure Clang (Toolchain Anti-Gagal)
+      - name: Download ZyCros Clang (Toolchain Cocok Buat Surya)
         run: |
-          mkdir -p $GITHUB_WORKSPACE/azure-clang
-          git clone --depth=1 https://github.com/P some-guy/azure-clang.git $GITHUB_WORKSPACE/azure-clang
-          # NB: Jika link di atas ada kendala, repo di bawah ini adalah alternatif tercepat
-          rm -rf $GITHUB_WORKSPACE/azure-clang
-          git clone --depth=1 https://gitlab.com/ZyCros/ZyCros-Clang.git $GITHUB_WORKSPACE/azure-clang
+          mkdir -p $GITHUB_WORKSPACE/zycros-clang
+          git clone --depth=1 https://gitlab.com/ZyCros/ZyCros-Clang.git $GITHUB_WORKSPACE/zycros-clang
 
       - name: Ambil Source Strombreaker Lo
         run: |
@@ -44,7 +41,7 @@ jobs:
           export ARCH=arm64
           export SUBARCH=arm64
           # Masukkan compiler baru ke jalur sistem agar build.sh mendeteksi perintah clang
-          export PATH="$GITHUB_WORKSPACE/azure-clang/bin:$PATH"
+          export PATH="$GITHUB_WORKSPACE/zycros-clang/bin:$PATH"
           chmod +x build.sh
           ./build.sh
 
