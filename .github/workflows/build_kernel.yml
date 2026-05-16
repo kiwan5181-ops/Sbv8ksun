@@ -17,13 +17,22 @@ jobs:
         run: |
           git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
 
-      - name: Pasang KernelSU Next (Branch Legacy Benar)
+      - name: Pasang KernelSU Next (Pemindahan Jalur Struktur)
         run: |
           cd kernel-source
-          # 1. Clone langsung pake branch 'legacy' (wajib buat kernel 4.14 Poco X3)
-          git clone https://github.com/rifsxd/KernelSU-Next.git -b legacy drivers/kernelsu
+          # 1. Clone branch legacy ke folder penampungan sementara
+          git clone --depth=1 https://github.com/rifsxd/KernelSU-Next.git -b legacy ksu_temp
           
-          # 2. Daftarkan langsung ke Makefile utama driver
+          # 2. Buat folder drivers/kernelsu yang bersih
+          mkdir -p drivers/kernelsu
+          
+          # 3. Pindahkan isi dari folder 'kernel' bawaan KSU-Next langsung ke root drivers/kernelsu
+          cp -r ksu_temp/kernel/* drivers/kernelsu/
+          
+          # 4. Bersihkan folder sementara
+          rm -rf ksu_temp
+          
+          # 5. Daftarkan ke Makefile utama driver
           echo "obj-y += kernelsu/" >> drivers/Makefile
 
       - name: Aktifkan KSU Next ke Surya Defconfig
