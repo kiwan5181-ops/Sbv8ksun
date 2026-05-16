@@ -1,0 +1,50 @@
+name: Build Strombreaker KSU Next Surya
+on:
+  push:
+    branches: [ "Sbv8ksun" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Alat Kerja
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc build-essential libncurses5-dev libssl-dev bison flex libelf-dev clang lld git rsync
+
+      - name: Download Proton Clang (Toolchain)
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/proton-clang
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git $GITHUB_WORKSPACE/proton-clang
+
+      - name: Ambil Source Strombreaker Lo
+        run: |
+          git clone --depth=1 https://github.com/kiwan5181-ops/Sbv8ksun.git -b Sbv8ksun kernel-source
+
+      - name: Pasang KernelSU Next Otomatis
+        run: |
+          cd kernel-source
+          curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/main/kernel/setup.sh" | bash -s main
+
+      - name: Aktifkan KSU Next ke Surya Defconfig
+        run: |
+          cd kernel-source
+          echo "CONFIG_KSU=y" >> arch/arm64/configs/surya-perf_defconfig
+          echo "CONFIG_KSU_NEXT=y" >> arch/arm64/configs/surya-perf_defconfig
+          echo "CONFIG_OVERLAY_FS=y" >> arch/arm64/configs/surya-perf_defconfig
+
+      - name: Proses Masak Kernel (Compile)
+        run: |
+          cd kernel-source
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export PATH="$GITHUB_WORKSPACE/proton-clang/bin:$PATH"
+          make O=out ARCH=arm64 surya-perf_defconfig
+          make O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- -j$(nproc --all)
+
+      - name: Ambil Hasil Jadi (Image.gz)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Strombreaker-Surya-KSUNext
+          path: kernel-source/out/arch/arm64/boot/Image.gz-dtb
